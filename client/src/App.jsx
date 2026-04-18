@@ -1,9 +1,5 @@
-
-
-
-
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 // Auth Pages
 import Login from "./pages/Login";
@@ -19,157 +15,93 @@ import Analytics from "./components/Analytics";
 import MCQ from "./pages/MCQ";
 import Evaluate from "./pages/Evaluate";
 import Planner from "./pages/Planner";
-
 import Gamification from "./pages/Gamification";
 import CareerAI from "./pages/CareerAI";
 
-// ✅ Attention Module
+// Attention
 import AttentionMonitor from "./components/AttentionMonitor";
 import AttentionReport from "./pages/AttentionReport";
 
-// ✅ NEW: Profile Page
+// Profile
 import ProfilePage from "./pages/ProfilePage";
 
-// Protected Route
+// 🔥 GLOBAL CONTEXT
+import React from "react";
+export const MonitorContext = React.createContext();
+
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem("token");
   return token ? children : <Navigate to="/" />;
 };
 
 function App() {
+  const token = localStorage.getItem("token");
+
+  // ✅ INIT FROM STORAGE
+  const [isMonitorOn, setIsMonitorOn] = useState(
+    localStorage.getItem("monitor") === "on"
+  );
+
+  // ✅ KEEP STORAGE IN SYNC
+  useEffect(() => {
+    localStorage.setItem("monitor", isMonitorOn ? "on" : "off");
+  }, [isMonitorOn]);
+
   return (
-    <BrowserRouter>
-      <Routes>
+    <MonitorContext.Provider value={{ isMonitorOn, setIsMonitorOn }}>
+      <BrowserRouter>
 
-        {/* Auth */}
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* ✅ GLOBAL MONITOR */}
+        {token && isMonitorOn && (
+          <div className="global-monitor">
+            <AttentionMonitor />
+          </div>
+        )}
 
-        {/* Dashboard */}
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
+        <Routes>
 
-        {/* ✅ Profile Page */}
-        <Route
-          path="/profile"
-          element={
-            <PrivateRoute>
-              <ProfilePage />
-            </PrivateRoute>
-          }
-        />
+          {/* Auth */}
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-        {/* Chat */}
-        <Route
-          path="/chat"
-          element={
-            <PrivateRoute>
-              <ChatBot />
-            </PrivateRoute>
-          }
-        />
+          {/* Dashboard */}
+          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
 
-        {/* Weekly Report */}
-        <Route
-          path="/report"
-          element={
-            <PrivateRoute>
-              <WeeklyReport />
-            </PrivateRoute>
-          }
-        />
+          {/* Profile */}
+          <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
 
-        {/* Analytics */}
-        <Route
-          path="/analytics"
-          element={
-            <PrivateRoute>
-              <Analytics />
-            </PrivateRoute>
-          }
-        />
+          {/* Chat */}
+          <Route path="/chat" element={<PrivateRoute><ChatBot /></PrivateRoute>} />
 
-        {/* MCQ */}
-        <Route
-          path="/mcq"
-          element={
-            <PrivateRoute>
-              <MCQ />
-            </PrivateRoute>
-          }
-        />
+          {/* Weekly Report */}
+          <Route path="/report" element={<PrivateRoute><WeeklyReport /></PrivateRoute>} />
 
-        {/* Evaluate */}
-        <Route
-          path="/evaluate"
-          element={
-            <PrivateRoute>
-              <Evaluate />
-            </PrivateRoute>
-          }
-        />
+          {/* Analytics */}
+          <Route path="/analytics" element={<PrivateRoute><Analytics /></PrivateRoute>} />
 
-        {/* Planner */}
-        <Route
-          path="/planner"
-          element={
-            <PrivateRoute>
-              <Planner />
-            </PrivateRoute>
-          }
-        />
+          {/* MCQ */}
+          <Route path="/mcq" element={<PrivateRoute><MCQ /></PrivateRoute>} />
 
-        {/* Gamification */}
-        <Route
-          path="/game"
-          element={
-            <PrivateRoute>
-              <Gamification />
-            </PrivateRoute>
-          }
-        />
+          {/* Evaluate */}
+          <Route path="/evaluate" element={<PrivateRoute><Evaluate /></PrivateRoute>} />
 
-        {/* Career AI */}
-        <Route
-          path="/career"
-          element={
-            <PrivateRoute>
-              <CareerAI />
-            </PrivateRoute>
-          }
-        />
+          {/* Planner */}
+          <Route path="/planner" element={<PrivateRoute><Planner /></PrivateRoute>} />
 
-        {/* Attention Monitor */}
-        <Route
-          path="/monitor"
-          element={
-            <PrivateRoute>
-              <AttentionMonitor />
-            </PrivateRoute>
-          }
-        />
+          {/* Game */}
+          <Route path="/game" element={<PrivateRoute><Gamification /></PrivateRoute>} />
 
-        {/* Attention Report */}
-        <Route
-          path="/attention-report"
-          element={
-            <PrivateRoute>
-              <AttentionReport />
-            </PrivateRoute>
-          }
-        />
+          {/* Career */}
+          <Route path="/career" element={<PrivateRoute><CareerAI /></PrivateRoute>} />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" />} />
+          {/* Report */}
+          <Route path="/attention-report" element={<PrivateRoute><AttentionReport /></PrivateRoute>} />
 
-      </Routes>
-    </BrowserRouter>
+          <Route path="*" element={<Navigate to="/" />} />
+
+        </Routes>
+      </BrowserRouter>
+    </MonitorContext.Provider>
   );
 }
 

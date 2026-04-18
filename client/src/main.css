@@ -196,7 +196,7 @@ body {
 }
 
 
-
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 /* =========================
    MAIN BACKGROUND
@@ -356,7 +356,7 @@ body {
 }
 
 
-
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 /* =========================
    LOGIN PAGE STYLING
@@ -555,11 +555,11 @@ body {
 
 
 
-
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 /* ======================
-   GLOBAL
+   dashboard main styling
 ====================== */
 
 * {
@@ -663,7 +663,6 @@ body {
 .monitor-card {
   background: white;
   border-radius: 14px;
-  padding: 25px;
   border: 1px solid #e5e7eb;
   box-shadow: 0 4px 20px rgba(0,0,0,0.04);
 }
@@ -772,6 +771,182 @@ body {
 }
 
 
+   
+.burnout-popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #ff4d4f;
+  color: white;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-weight: 500;
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.da-plan-btn {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.view-plan-btn {
+  background: #2563eb;
+  color: #fff;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.view-plan-btn:hover {
+  background: #1e40af;
+}
+
+
+
+
+/* ===== MODAL BACKGROUND ===== */
+.timetable-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* ===== MAIN BOX ===== */
+.timetable-box {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 18px;
+  width: 90%;
+  max-height: 90%;
+  overflow-y: auto;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+/* ===== ANIMATION ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===== HEADER ===== */
+.timetable-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.timetable-header h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ===== CLOSE BUTTON ===== */
+.close-btn {
+  background: #ef4444;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.close-btn:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+/* ===== DROPDOWN ===== */
+.plan-dropdown {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  margin-bottom: 18px;
+  font-size: 14px;
+  outline: none;
+}
+
+/* ===== GRID ===== */
+.timetable-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+/* ===== DAY CARD ===== */
+.day-box {
+  background: linear-gradient(135deg, #f8fafc, #eef2ff);
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  transition: 0.3s;
+}
+
+.day-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+/* ===== DAY TITLE ===== */
+.day-box h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #1f2937;
+}
+
+/* ===== SLOT ===== */
+.slot {
+  font-size: 14px;
+  margin: 6px 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  transition: 0.2s;
+}
+
+.slot:hover {
+  background: #eef2ff;
+}
+
+/* ===== SUBJECT COLORS (OPTIONAL BONUS) ===== */
+.slot strong {
+  color: #4f46e5;
+}
 
 
 
@@ -779,6 +954,15 @@ body {
 
 
 
+
+
+
+
+
+
+
+
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 /* =========================
    SIDEBAR CONTAINER
@@ -870,7 +1054,7 @@ body {
 
 
 
-
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 
@@ -1113,7 +1297,7 @@ body {
 
 
 
-
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 
@@ -1240,7 +1424,7 @@ body {
 
 
 
-
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 
@@ -1862,7 +2046,7 @@ cursor:pointer;
 
 
 
-
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 
@@ -2283,7 +2467,7 @@ transform:translateY(-1px);
 }
 
 
-
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 
@@ -2745,7 +2929,7 @@ transform:translateY(-1px);
 
 
 
-
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 
@@ -2758,15 +2942,7 @@ transform:translateY(-1px);
 /* ===============================
    STUDY PLANNER PROFESSIONAL
 ================================ */
-/* ===============================
-   GLOBAL
-================================ */
-/* ===============================
-   GLOBAL
-================================ */
-/* ===============================
-   GLOBAL
-================================ */
+
 
 *{
   margin:0;
@@ -3025,60 +3201,14 @@ body{
   color: #1e293b;
 }
 
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 
 
-/* ===============================
-   BURNOUT POPUP */
-
-   
-.burnout-popup {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: #ff4d4f;
-  color: white;
-  padding: 12px 18px;
-  border-radius: 8px;
-  font-weight: 500;
-  z-index: 1000;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-.da-plan-btn {
-  margin-top: 20px;
-  margin-bottom: 10px;
-}
-
-.view-plan-btn {
-  background: #2563eb;
-  color: #fff;
-  padding: 10px 18px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: 0.3s;
-}
-
-.view-plan-btn:hover {
-  background: #1e40af;
-}
 
 
-
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 
@@ -3207,7 +3337,7 @@ body{
 
 
 
-
+/*---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
 
 
 
@@ -3325,4 +3455,309 @@ body{
 
 .cr5-msg.ai {
   background: #e5e7eb;
+}
+
+
+
+
+
+.plan-dropdown {
+  margin-left: auto;
+  margin-right: 12px;
+
+  padding: 8px 14px;
+  padding-right: 35px;
+
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+
+  background: linear-gradient(135deg, #f8fafc, #eef2ff);
+  color: #111827;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  cursor: pointer;
+  outline: none;
+
+  transition: all 0.25s ease;
+
+  /* remove default arrow */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* custom arrow */
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%236b7280' height='20' viewBox='0 0 20 20' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M5 7l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+}
+
+/* hover */
+.plan-dropdown:hover {
+  border-color: #2563eb;
+  background: #eef2ff;
+}
+
+/* focus (click) */
+.plan-dropdown:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* active feel */
+.plan-dropdown:active {
+  transform: scale(0.98);
+}
+
+
+
+/* GLOBAL FLOATING MONITOR */
+.global-monitor {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 340px;
+  z-index: 9999;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  overflow: hidden;
+}
+
+
+
+
+
+
+
+.AM-container.floating {
+  position: fixed;
+  width: 320px;
+  z-index: 9999;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+.drag-handle {
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+
+
+
+
+.global-monitor {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 340px;
+  z-index: 9999;
+}
+
+/* floating style */
+.AM-container.floating {
+  position: fixed;
+  width: 320px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  overflow: hidden;
+  z-index: 9999;
+}
+
+
+
+
+
+
+
+
+
+/* ===== MODAL BACKGROUND ===== */
+.timetable-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* ===== MAIN BOX ===== */
+.timetable-box {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 18px;
+  width: 90%;
+  max-height: 90%;
+  overflow-y: auto;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+/* ===== ANIMATION ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ===== HEADER ===== */
+.timetable-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.timetable-header h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ===== CLOSE BUTTON ===== */
+.close-btn {
+  background: #ef4444;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.close-btn:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+/* ===== DROPDOWN ===== */
+.plan-dropdown {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  margin-bottom: 18px;
+  font-size: 14px;
+  outline: none;
+}
+
+/* ===== GRID ===== */
+.timetable-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+/* ===== DAY CARD ===== */
+.day-box {
+  background: linear-gradient(135deg, #f8fafc, #eef2ff);
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  transition: 0.3s;
+}
+
+.day-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+/* ===== DAY TITLE ===== */
+.day-box h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #1f2937;
+}
+
+/* ===== SLOT ===== */
+.slot {
+  font-size: 14px;
+  margin: 6px 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  transition: 0.2s;
+}
+
+.slot:hover {
+  background: #eef2ff;
+}
+
+/* ===== SUBJECT COLORS (OPTIONAL BONUS) ===== */
+.slot strong {
+  color: #4f46e5;
+}
+
+
+
+.AM-overlay {
+  width: 100%;
+  height: 200px;
+  background: #111;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.AM-video {
+  width: 100%;
+  border-radius: 12px;
+  transform: scaleX(-1);
+}
+
+.AM-subject-select {
+  padding: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.AM-subject-select select {
+  width: 90%;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #111;
+  color: white;
+}
+
+.AM-overlay {
+  width: 100%;
+  height: 200px;
+  background: #111;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.AM-video {
+  width: 100%;
+  border-radius: 12px;
+  transform: scaleX(-1);
 }

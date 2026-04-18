@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import "../main.css"; // ✅ Import CSS
+import "../main.css";
 
 function AttentionMonitor() {
 
@@ -8,32 +8,162 @@ function AttentionMonitor() {
   const poseRef = useRef(null);
   const streamRef = useRef(null);
 
+  const [position, setPosition] = useState({ x: 20, y: 20 });
+  const [dragging, setDragging] = useState(false);
+
   const [session, setSession] = useState(0);
   const [absent, setAbsent] = useState(0);
   const [alerts, setAlerts] = useState(0);
   const [status, setStatus] = useState("Starting...");
 
+  const [isTabActive, setIsTabActive] = useState(true);
+  const [studyTime, setStudyTime] = useState(0);
+
+  const [manualSubject, setManualSubject] = useState("");
+
+  const alertPlayedRef = useRef(false);
+
+  // 🔥 SAVE SUBJECT + TRIGGER DASHBOARD UPDATE (FIX)
   useEffect(() => {
+    localStorage.setItem("manualSubject", manualSubject);
 
+    // 🔥 VERY IMPORTANT
+    window.dispatchEvent(new Event("manualSubjectChange"));
+
+  }, [manualSubject]);
+
+  // DRAG
+  const onMouseDown = () => setDragging(true);
+  const onMouseUp = () => setDragging(false);
+
+  const onMouseMove = (e) => {
+    if (!dragging) return;
+    setPosition({
+      x: e.clientX - 150,
+      y: e.clientY - 80
+    });
+  };
+
+  useEffect(() => {
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [dragging]);
+
+  // 🔥 CAMERA STOP
+  const stopCamera = () => {
+    try {
+      if (cameraRef.current) {
+        cameraRef.current.stop();
+        cameraRef.current = null;
+      }
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+
+      setStatus("Camera Stopped ⛔");
+
+    } catch {}
+  };
+
+  useEffect(() => {
     startSystem();
+  }, []);
 
+  // TAB SWITCH
+  useEffect(() => {
     const handleVisibility = () => {
-      if (document.hidden) stopCamera();
-      else startSystem();
+      if (document.visibilityState === "visible") {
+        setIsTabActive(true);
+        if (!streamRef.current) startSystem();
+      } else {
+        setIsTabActive(false);
+        stopCamera();
+      }
     };
 
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
-      stopCamera();
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-
   }, []);
+
+  // CLEANUP
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  // TIMER
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStudyTime(t => t + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // AUTO SUBJECT
+  const getAutoSubject = () => {
+    try {
+      const plan = JSON.parse(localStorage.getItem("activePlan"));
+      if (!plan) return "General";
+
+      const now = new Date();
+      const day = now.toLocaleString("en-US", { weekday: "long" });
+
+      let hour = now.getHours();
+      let nextHour = hour + 1;
+
+      const formatTime = (h1, h2) => {
+        const f = (h) => (h > 12 ? h - 12 : h) + ":00";
+        return `${f(h1)}-${f(h2)}`;
+      };
+
+      const slot = formatTime(hour, nextHour);
+
+      return plan?.[day]?.[slot] || "General";
+
+    } catch {
+      return "General";
+    }
+  };
+
+  const getCurrentSubject = () => {
+    return manualSubject || getAutoSubject();
+  };
+
+  // SEND DATA
+  useEffect(() => {
+    if (studyTime > 0 && studyTime % 60 === 0) {
+      fetch("http://localhost:5000/api/study/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userId: "moin123",
+          subject: getCurrentSubject(),
+          duration: 60
+        })
+      });
+    }
+  }, [studyTime, manualSubject]);
 
   const startSystem = async () => {
     try {
-
       if (streamRef.current) return;
 
       const pose = new window.Pose({
@@ -83,36 +213,7 @@ function AttentionMonitor() {
     }
   };
 
-  const stopCamera = () => {
-
-    if (document.pictureInPictureElement) {
-      document.exitPictureInPicture().catch(() => {});
-    }
-
-    if (cameraRef.current) {
-      cameraRef.current.stop();
-      cameraRef.current = null;
-    }
-
-    if (poseRef.current) {
-      poseRef.current.close();
-      poseRef.current = null;
-    }
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
-      streamRef.current = null;
-    }
-
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-
-    setStatus("Camera Paused ⏸️");
-  };
-
   const handleResults = (results) => {
-
     setSession(s => s + 1);
 
     if (results.poseLandmarks?.length) {
@@ -124,108 +225,48 @@ function AttentionMonitor() {
     }
   };
 
-  useEffect(() => {
-
-    if (absent >= 60) {
-      new Audio("/alert.mp3").play();
-      setAlerts(a => a + 1);
-      setAbsent(0);
-    }
-
-  }, [absent]);
-
   const getScore = () => {
     if (session === 0) return 100;
     return Math.max(0, 100 - (absent / session) * 100);
   };
 
   return (
+    <div className="AM-container floating" style={{ top: position.y, left: position.x, position: "fixed", zIndex: 9999 }}>
 
-  <div className="AM-container">
+      <div className="AM-header drag-handle" onMouseDown={onMouseDown}>
+        <div className="AM-title">Live Monitor</div>
 
-    {/* HEADER */}
-    <div className="AM-header">
-
-      <div className="AM-title">
-        Live Monitor
+        <div className={`AM-badge ${status.includes("Present") ? "active" : "inactive"}`}>
+          {status}
+        </div>
       </div>
 
-      <div
-        className={`AM-badge ${
-          status.includes("Active") || status.includes("Present")
-            ? "active"
-            : "inactive"
-        }`}
-      >
-        {status}
+      <div className="AM-subject-select">
+        <select value={manualSubject} onChange={(e) => setManualSubject(e.target.value)}>
+          <option value="">Auto (Timetable)</option>
+          <option value="Java">Java</option>
+          <option value="C">C</option>
+          <option value="Python">Python</option>
+          <option value="DBMS">DBMS</option>
+        </select>
       </div>
 
-    </div>
-
-
-    {/* VIDEO */}
-    <div className="AM-video-box">
-
-      <video
-        ref={videoRef}
-        className="AM-video"
-        muted
-        playsInline
-        disablePictureInPicture
-        controls={false}
-      />
-
-    </div>
-
-
-    {/* FOCUS BAR */}
-    <div className="AM-focus">
-
-      <div className="AM-focus-text">
-        Focus Level: {getScore().toFixed(0)}%
+      <div className="AM-video-box">
+        {isTabActive ? (
+          <video ref={videoRef} className="AM-video" muted playsInline />
+        ) : (
+          <div className="AM-overlay">Monitoring Paused ⏸️</div>
+        )}
       </div>
 
-      <div className="AM-focus-bar">
-        <div
-          className="AM-focus-fill"
-          style={{ width: `${getScore()}%` }}
-        />
+      <div className="AM-focus">
+        <div className="AM-focus-text">
+          Focus Level: {getScore().toFixed(0)}%
+        </div>
       </div>
 
     </div>
-
-
-    {/* STATS */}
-    <div className="AM-stats">
-
-      <div className="AM-stat">
-        {session}s
-        <br />
-        Session
-      </div>
-
-      <div className="AM-stat">
-        {absent}s
-        <br />
-        Absent
-      </div>
-
-      <div className="AM-stat">
-        {alerts}
-        <br />
-        Alerts
-      </div>
-
-      <div className="AM-stat">
-        {getScore().toFixed(0)}%
-        <br />
-        Score
-      </div>
-
-    </div>
-
-  </div>
-);
+  );
 }
 
 export default AttentionMonitor;

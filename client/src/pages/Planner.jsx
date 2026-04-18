@@ -1,3 +1,10 @@
+
+
+
+
+
+
+
 // import { useState, useEffect } from "react";
 // import axios from "axios";
 // import { useNavigate } from "react-router-dom";
@@ -7,8 +14,8 @@
 
 //   const navigate = useNavigate();
 
+//   const [title, setTitle] = useState(""); // ✅ NEW
 //   const [subjects, setSubjects] = useState("");
-//   const [days, setDays] = useState(0);
 //   const [plan, setPlan] = useState(null);
 //   const [history, setHistory] = useState([]);
 //   const [loading, setLoading] = useState(false);
@@ -36,11 +43,7 @@
 
 //   const makePlan = async () => {
 
-//     const totalDays = parseInt(days);
-
 //     if (!subjects.trim()) return alert("Enter subjects");
-//     if (!totalDays || totalDays <= 0 || totalDays > 60)
-//       return alert("Enter valid days");
 
 //     setLoading(true);
 //     setPlan(null);
@@ -48,7 +51,7 @@
 //     try {
 //       const res = await axios.post(
 //         "http://localhost:5000/api/ai/plan",
-//         { subjects, days: totalDays }
+//         { subjects }
 //       );
 
 //       let receivedPlan = res.data.plan;
@@ -57,16 +60,13 @@
 //         receivedPlan = JSON.parse(receivedPlan);
 //       }
 
-//       console.log("🔥 PLAN DATA:", receivedPlan);
-
 //       setPlan(receivedPlan);
 
-//       // 🔥 SAVE PLAN
 //       await axios.post(
 //         "http://localhost:5000/api/study/save",
 //         {
+//           title,
 //           subjects: subjects.split(",").map(s => s.trim()),
-//           days: totalDays,
 //           plan: receivedPlan
 //         },
 //         {
@@ -75,8 +75,6 @@
 //       );
 
 //       fetchHistory();
-
-     
 
 //     } catch (err) {
 //       console.error(err);
@@ -141,7 +139,7 @@
 //                 }}
 //               >
 //                 <div className="pr-title">
-//                   {item.subjects.join(", ")}
+//                   {item.title || item.subjects.join(", ")}
 //                 </div>
 //                 <div className="pr-date">
 //                   {new Date(item.createdAt).toLocaleString()}
@@ -183,6 +181,17 @@
 //           {/* FORM */}
 //           <div className="pr-form">
 
+//             {/* 🔥 TITLE INPUT */}
+//             <div className="pr-field">
+//               <label>Plan Title</label>
+//               <input
+//                 className="pr-input"
+//                 placeholder="Enter plan title..."
+//                 value={title}
+//                 onChange={(e) => setTitle(e.target.value)}
+//               />
+//             </div>
+
 //             <div className="pr-field">
 //               <label>Subjects</label>
 //               <input
@@ -190,16 +199,6 @@
 //                 placeholder="Subjects (DBMS, OS, CN...)"
 //                 value={subjects}
 //                 onChange={(e) => setSubjects(e.target.value)}
-//               />
-//             </div>
-
-//             <div className="pr-field">
-//               <label>Days</label>
-//               <input
-//                 type="number"
-//                 className="pr-input"
-//                 value={days}
-//                 onChange={(e) => setDays(parseInt(e.target.value) || 0)}
 //               />
 //             </div>
 
@@ -215,6 +214,10 @@
 //           {/* TABLE */}
 //           {plan && (
 //             <div className="pr-table-container">
+
+//               <h3 className="pr-table-title">
+//                 📅 {title || "Weekly Study Plan"}
+//               </h3>
 
 //               <table className="pr-table">
 
@@ -273,6 +276,7 @@
 
 
 
+
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -282,7 +286,7 @@ function Planner() {
 
   const navigate = useNavigate();
 
-  const [title, setTitle] = useState(""); // ✅ NEW
+  const [title, setTitle] = useState("");
   const [subjects, setSubjects] = useState("");
   const [plan, setPlan] = useState(null);
   const [history, setHistory] = useState([]);
@@ -330,6 +334,7 @@ function Planner() {
 
       setPlan(receivedPlan);
 
+      // 🔥 SAVE PLAN (existing)
       await axios.post(
         "http://localhost:5000/api/study/save",
         {
@@ -341,6 +346,9 @@ function Planner() {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
+
+      // 🔥 NEW: STORE IN LOCALSTORAGE (IMPORTANT)
+      localStorage.setItem("activePlan", JSON.stringify(receivedPlan));
 
       fetchHistory();
 
@@ -377,7 +385,6 @@ function Planner() {
 
     <div className="pr-layout">
 
-      {/* SIDEBAR */}
       <div className="pr-sidebar">
 
         <h3 className="pr-logo">AI Mentor</h3>
@@ -404,6 +411,9 @@ function Planner() {
                 onClick={() => {
                   setPlan(item.plan);
                   setActiveId(item._id);
+
+                  // 🔥 NEW: UPDATE ACTIVE PLAN
+                  localStorage.setItem("activePlan", JSON.stringify(item.plan));
                 }}
               >
                 <div className="pr-title">
@@ -427,12 +437,10 @@ function Planner() {
 
       </div>
 
-      {/* MAIN */}
       <div className="pr-main">
 
         <div className="pr-panel">
 
-          {/* HEADER */}
           <div className="pr-header">
 
             <button
@@ -446,10 +454,8 @@ function Planner() {
 
           </div>
 
-          {/* FORM */}
           <div className="pr-form">
 
-            {/* 🔥 TITLE INPUT */}
             <div className="pr-field">
               <label>Plan Title</label>
               <input
@@ -479,7 +485,6 @@ function Planner() {
 
           </div>
 
-          {/* TABLE */}
           {plan && (
             <div className="pr-table-container">
 

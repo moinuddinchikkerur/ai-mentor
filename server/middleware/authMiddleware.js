@@ -1,38 +1,62 @@
+
+
+
+
+
+
+
+
+
 import jwt from "jsonwebtoken";
 
 const authMiddleware = (req, res, next) => {
-
   try {
+    const jwtSecret = process.env.JWT_SECRET;
 
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
+    if (!jwtSecret) {
+      return res.status(500).json({
         success: false,
-        msg: "No token provided"
+        message: "JWT_SECRET missing in .env"
       });
     }
 
-    const token = authHeader.split(" ")[1];
+    const authHeader = req.headers.authorization || "";
+    const [scheme, token] = authHeader.split(" ");
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+    if (scheme !== "Bearer" || !token?.trim()) {
+      return res.status(401).json({
+        success: false,
+        message: "No token provided"
+      });
+    }
+
+    const decoded = jwt.verify(token.trim(), jwtSecret);
+
+    if (!decoded?.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token"
+      });
+    }
 
     req.user = {
       id: decoded.id
     };
 
     next();
-
   } catch (err) {
+    console.error("Auth Error:", err.message);
 
-    console.error("Auth Error:", err);
+    if (err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Token expired"
+      });
+    }
 
     return res.status(401).json({
       success: false,
-      msg: "Invalid token"
+      message: "Invalid token"
     });
   }
 };

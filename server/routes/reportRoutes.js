@@ -1,38 +1,29 @@
+
+
+
+
+
+
 import express from "express";
 import authMiddleware from "../middleware/authMiddleware.js";
+import {
+  getWeeklyReport,
+  getAnalytics,
+  saveAttention
+} from "../controllers/reportController.js";
 
 const router = express.Router();
 
-// Debug Route
 router.get("/test", (req, res) => {
   res.send("✅ Report Routes Working");
 });
 
-// Weekly Report
-router.get("/weekly", authMiddleware, (req, res) => {
+router.get("/weekly", authMiddleware, getWeeklyReport);
 
-  res.json({
-    success: true,
+router.get("/analytics", authMiddleware, getAnalytics);
 
-    report: {
-      week: "This Week",
-
-      plannedHours: 25,
-      completedHours: 12,
-      pendingHours: 13,
-
-      subjects: {
-        Physics: "Medium ⚠️",
-        Chemistry: "Strong 💪",
-        Biology: "Weak ❌"
-      },
-
-      passProbability: "75%",
-
-      suggestion: "Revise Biology and take 2 mock tests"
-    }
-  });
-
-});
+// Old compatibility route.
+// Your new AttentionMonitor should use /api/attention/save instead.
+router.post("/attention/save", authMiddleware, saveAttention);
 
 export default router;

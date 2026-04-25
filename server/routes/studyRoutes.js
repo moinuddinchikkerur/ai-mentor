@@ -1,45 +1,37 @@
-// import express from "express";
-// import {
-//   savePlan,
-//   getHistory,
-//   deletePlan
-// } from "../controllers/studyController.js";
 
-// import authMiddleware from "../middleware/authMiddleware.js";
 
-// const router = express.Router();
 
-// // 🔐 protect routes
-// router.use(authMiddleware);
 
-// router.post("/save", savePlan);
-// router.get("/history", getHistory);
-// router.delete("/:id", deletePlan);
 
-// export default router;
+
+
 
 
 
 import express from "express";
 import {
   savePlan,
+  saveSession,
   getHistory,
-  deletePlan,
-  saveSession // 🔥 NEW
+  getPlans,
+  deletePlan
 } from "../controllers/studyController.js";
-
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.use(authMiddleware);
+router.post("/save-plan", authMiddleware, savePlan);
+router.post("/plan", authMiddleware, savePlan);
+router.put("/plan/:id", authMiddleware, savePlan);
 
-router.post("/save", savePlan);
+router.post("/save", authMiddleware, saveSession);
+router.post("/save-session", authMiddleware, saveSession);
+router.post("/session", authMiddleware, saveSession);
 
-// 🔥 NEW ROUTE
-router.post("/session", saveSession);
+router.get("/history", authMiddleware, getHistory);
+router.get("/plans", authMiddleware, getPlans);
 
-router.get("/history", getHistory);
-router.delete("/:id", deletePlan);
+router.delete("/plan/:id", authMiddleware, deletePlan);
+router.delete("/:id", authMiddleware, deletePlan);
 
 export default router;

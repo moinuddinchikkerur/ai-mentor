@@ -1,7 +1,11 @@
+
+
+
+
+
 import mongoose from "mongoose";
 
 const weeklyReportSchema = new mongoose.Schema({
-
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -11,26 +15,50 @@ const weeklyReportSchema = new mongoose.Schema({
   weekStart: Date,
   weekEnd: Date,
 
-  totalHours: Number,
-
-  subjects: {
-    physics: Number,
-    chemistry: Number,
-    biology: Number,
-    general: Number
+  plannedHours: {
+    type: Number,
+    default: 25
   },
 
-  status: {
-    physics: String,
-    chemistry: String,
-    biology: String
+  completedHours: {
+    type: Number,
+    default: 0
+  },
+
+  pendingHours: {
+    type: Number,
+    default: 0
+  },
+
+  averageFocus: {
+    type: Number,
+    default: 0
+  },
+
+  subjects: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+
+  mcq: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
+
+  passProbability: {
+    type: String,
+    default: "0%"
+  },
+
+  suggestion: {
+    type: String,
+    default: ""
   },
 
   createdAt: {
     type: Date,
     default: Date.now
   }
-
 });
 
 export default mongoose.model("WeeklyReport", weeklyReportSchema);

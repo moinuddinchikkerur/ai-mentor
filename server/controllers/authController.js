@@ -1,66 +1,3 @@
-// import User from "../models/User.js";
-// import bcrypt from "bcryptjs";
-// import jwt from "jsonwebtoken";
-
-// // Register
-// export const registerUser = async (req, res) => {
-//   try {
-//     const { name, email, password } = req.body;
-
-//     const exist = await User.findOne({ email });
-//     if (exist)
-//       return res.status(400).json({ msg: "User already exists" });
-
-//     const salt = await bcrypt.genSalt(10);
-//     const hash = await bcrypt.hash(password, salt);
-
-//     const user = await User.create({
-//       name,
-//       email,
-//       password: hash
-//     });
-
-//     res.json({ msg: "Registered Successfully ✅" });
-
-//   } catch (err) {
-//     res.status(500).json({ msg: "Server error" });
-//   }
-// };
-
-
-// // Login
-// export const loginUser = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
-
-//     const user = await User.findOne({ email });
-//     if (!user)
-//       return res.status(400).json({ msg: "Invalid credentials" });
-
-//     const match = await bcrypt.compare(password, user.password);
-//     if (!match)
-//       return res.status(400).json({ msg: "Invalid credentials" });
-
-//     const token = jwt.sign(
-//       { id: user._id },
-//       process.env.JWT_SECRET,
-//       { expiresIn: "7d" }
-//     );
-
-//     res.json({
-//       token,
-//       user: {
-//         id: user._id,
-//         name: user.name,
-//         email: user.email
-//       }
-//     });
-
-//   } catch (err) {
-//     res.status(500).json({ msg: "Server error" });
-//   }
-// };
-
 
 
 
@@ -71,75 +8,266 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-/* ===============================
-   REGISTER USER
-================================ */
+const isValidEmail = (email) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+const createToken = (userId) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET missing in .env");
+  }
+
+  return jwt.sign(
+    { id: userId },
+    process.env.JWT_SECRET,
+    { expiresIn: "7d" }
+  );
+};
+
+const normalizeName = (value) => {
+  return String(value || "").trim().replace(/\s+/g, " ");
+};
+
+const normalizeEmail = (value) => {
+  return String(value || "").trim().toLowerCase();
+};
+
+const normalizeExam = (value) => {
+  return String(value || "").trim().replace(/\s+/g, " ");
+};
+
+const formatDateOnly = (value) => {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const getProfileCompletion = (user) => {
+  let completed = 0;
+
+  if (user.name) completed += 1;
+  if (user.email) completed += 1;
+  if (user.exam) completed += 1;
+  if (user.targetDate) completed += 1;
+
+  return Math.round((completed / 4) * 100);
+};
+
+const cleanUser = (user) => {
+  return {
+    id: String(user._id),
+    name: user.name,
+    email: user.email,
+    exam: user.exam || "",
+    targetDate: formatDateOnly(user.targetDate),
+    lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
+    createdAt: user.createdAt ? user.createdAt.toISOString() : null,
+    updatedAt: user.updatedAt ? user.updatedAt.toISOString() : null,
+    profileCompletion: getProfileCompletion(user)
+  };
+};
+
+const parseTargetDate = (value) => {
+  if (!value) return null;
+
+  const text = String(value).trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+
+  if (match) {
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+
+    const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
+
+    if (
+      date.getUTCFullYear() !== year ||
+      date.getUTCMonth() !== month - 1 ||
+      date.getUTCDate() !== day
+    ) {
+      return false;
+    }
+
+    return date;
+  }
+
+  const parsed = new Date(text);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return false;
+  }
+
+  return new Date(
+    Date.UTC(
+      parsed.getUTCFullYear(),
+      parsed.getUTCMonth(),
+      parsed.getUTCDate(),
+      12,
+      0,
+      0,
+      0
+    )
+  );
+};
+
+const isPastDate = (date) => {
+  if (!date) return false;
+
+  const now = new Date();
+
+  const todayUtc = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate()
+  );
+
+  const compareUtc = Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate()
+  );
+
+  return compareUtc < todayUtc;
+};
+
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, exam, targetDate } = req.body;
 
-    // Basic validation
-    if (!name || !email || !password) {
+    if (!name?.trim() || !email?.trim() || !password) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required",
+        message: "Name, email and password are required"
       });
     }
 
-    const exist = await User.findOne({ email });
+    const normalizedName = normalizeName(name);
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedExam = normalizeExam(exam);
+
+    if (normalizedName.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Name must be at least 2 characters"
+      });
+    }
+
+    if (normalizedName.length > 60) {
+      return res.status(400).json({
+        success: false,
+        message: "Name must be 60 characters or less"
+      });
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid email"
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters"
+      });
+    }
+
+    if (normalizedExam.length > 80) {
+      return res.status(400).json({
+        success: false,
+        message: "Exam name must be 80 characters or less"
+      });
+    }
+
+    const parsedTargetDate = parseTargetDate(targetDate);
+
+    if (parsedTargetDate === false) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid target date"
+      });
+    }
+
+    if (parsedTargetDate && isPastDate(parsedTargetDate)) {
+      return res.status(400).json({
+        success: false,
+        message: "Target date cannot be in the past"
+      });
+    }
+
+    const exist = await User.exists({ email: normalizedEmail });
 
     if (exist) {
       return res.status(400).json({
         success: false,
-        message: "User already exists",
+        message: "User already exists"
       });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-      name,
-      email,
+      name: normalizedName,
+      email: normalizedEmail,
       password: hashedPassword,
+      exam: normalizedExam,
+      targetDate: parsedTargetDate
     });
 
     return res.status(201).json({
       success: true,
-      message: "Registered Successfully ✅",
+      message: "Registered Successfully. Please login.",
+      user: cleanUser(user)
     });
-
   } catch (err) {
     console.error("Register Error:", err);
+
+    if (err.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already in use"
+      });
+    }
+
     return res.status(500).json({
       success: false,
-      message: "Server error",
+      message: err.message || "Server error"
     });
   }
 };
 
-
-/* ===============================
-   LOGIN USER
-================================ */
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
-    if (!email || !password) {
+    if (!email?.trim() || !password) {
       return res.status(400).json({
         success: false,
-        message: "Email and password are required",
+        message: "Email and password are required"
       });
     }
 
-    const user = await User.findOne({ email });
+    const normalizedEmail = normalizeEmail(email);
+
+    const user = await User
+      .findOne({ email: normalizedEmail })
+      .select("+password");
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: "Invalid credentials",
+        message: "Invalid credentials"
       });
     }
 
@@ -148,34 +276,213 @@ export const loginUser = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({
         success: false,
-        message: "Invalid credentials",
+        message: "Invalid credentials"
       });
     }
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    user.lastLoginAt = new Date();
+    await user.save();
+
+    const token = createToken(user._id);
 
     return res.status(200).json({
       success: true,
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      user: cleanUser(user)
     });
-
   } catch (err) {
     console.error("Login Error:", err);
+
     return res.status(500).json({
       success: false,
-      message: "Server error",
+      message: err.message || "Server error"
     });
   }
 };
 
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
 
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    return res.json({
+      success: true,
+      user: cleanUser(user)
+    });
+  } catch (err) {
+    console.error("Get Me Error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load profile"
+    });
+  }
+};
+
+export const updateProfile = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      exam,
+      targetDate,
+      oldPassword,
+      newPassword
+    } = req.body;
+
+    const user = await User
+      .findById(req.user.id)
+      .select("+password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    if (!name?.trim() || !email?.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Name and email are required"
+      });
+    }
+
+    const normalizedName = normalizeName(name);
+    const normalizedEmail = normalizeEmail(email);
+    const normalizedExam = normalizeExam(exam);
+
+    if (normalizedName.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Name must be at least 2 characters"
+      });
+    }
+
+    if (normalizedName.length > 60) {
+      return res.status(400).json({
+        success: false,
+        message: "Name must be 60 characters or less"
+      });
+    }
+
+    if (!isValidEmail(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid email"
+      });
+    }
+
+    if (normalizedExam.length > 80) {
+      return res.status(400).json({
+        success: false,
+        message: "Exam name must be 80 characters or less"
+      });
+    }
+
+    const parsedTargetDate = parseTargetDate(targetDate);
+
+    if (parsedTargetDate === false) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid target date"
+      });
+    }
+
+    if (parsedTargetDate && isPastDate(parsedTargetDate)) {
+      return res.status(400).json({
+        success: false,
+        message: "Target date cannot be in the past"
+      });
+    }
+
+    const emailTaken = await User.exists({
+      email: normalizedEmail,
+      _id: { $ne: user._id }
+    });
+
+    if (emailTaken) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already in use"
+      });
+    }
+
+    user.name = normalizedName;
+    user.email = normalizedEmail;
+    user.exam = normalizedExam;
+    user.targetDate = parsedTargetDate;
+
+    const wantsPasswordChange = Boolean(oldPassword || newPassword);
+
+    if (wantsPasswordChange) {
+      if (!oldPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Old password is required"
+        });
+      }
+
+      if (!newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "New password is required"
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: "New password must be at least 6 characters"
+        });
+      }
+
+      if (oldPassword === newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "New password must be different from old password"
+        });
+      }
+
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: "Old password incorrect"
+        });
+      }
+
+      user.password = await bcrypt.hash(newPassword, 10);
+    }
+
+    await user.save();
+
+    return res.json({
+      success: true,
+      message: "Profile updated",
+      user: cleanUser(user)
+    });
+  } catch (err) {
+    console.error("Update Profile Error:", err);
+
+    if (err.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already in use"
+      });
+    }
+
+    return res.status(500).json({
+      success: false,
+      message: "Profile update failed"
+    });
+  }
+};
 

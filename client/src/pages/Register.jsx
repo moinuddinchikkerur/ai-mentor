@@ -1,10 +1,14 @@
+
+
+
+
+
 import { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import "../main.css"; // Import CSS
+import { authService } from "../services/api";
+import "../main.css";
 
 function Register() {
-
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -12,6 +16,10 @@ function Register() {
     email: "",
     password: ""
   });
+
+  const [message, setMessage] = useState("");
+  const [type, setType] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const change = (e) => {
     setForm({
@@ -23,38 +31,64 @@ function Register() {
   const submit = async (e) => {
     e.preventDefault();
 
+    setMessage("");
+    setType("");
+    setLoading(true);
+
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/register",
-        form
-      );
+      const email = form.email.trim().toLowerCase();
 
-      alert(res.data.msg);
-      navigate("/");
+      const res = await authService.register({
+        name: form.name.trim(),
+        email,
+        password: form.password
+      });
 
+      setType("success");
+      setMessage(res.data?.message || "Registered Successfully");
+
+      setTimeout(() => {
+        navigate("/login", {
+          replace: true,
+          state: {
+            email,
+            registered: true
+          }
+        });
+      }, 700);
     } catch (err) {
-      alert("Register failed ❌");
+      setType("error");
+      setMessage(
+        err.response?.data?.message ||
+          err.message ||
+          "Register failed"
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-
     <div className="re1">
+      {message && (
+        <div className={`lo-toast ${type}`}>
+          {message}
+        </div>
+      )}
 
       <div className="re2">
-
         <div className="re-card">
-
           <h2 className="re-title">Create Account</h2>
-          <p className="re-sub">Start your journey with us 🚀</p>
+          <p className="re-sub">Start your journey with us</p>
 
           <form onSubmit={submit} className="re-form">
-
             <input
               className="re-input"
               name="name"
               placeholder="Full Name"
+              value={form.name}
               onChange={change}
+              autoComplete="name"
               required
             />
 
@@ -63,7 +97,9 @@ function Register() {
               name="email"
               type="email"
               placeholder="Email Address"
+              value={form.email}
               onChange={change}
+              autoComplete="email"
               required
             />
 
@@ -72,27 +108,30 @@ function Register() {
               name="password"
               type="password"
               placeholder="Password"
+              value={form.password}
               onChange={change}
+              autoComplete="new-password"
+              minLength="6"
               required
             />
 
-            <button className="re-btn">
-              Register
+            <button
+              type="submit"
+              className="re-btn"
+              disabled={loading}
+            >
+              {loading ? "Registering..." : "Register"}
             </button>
-
           </form>
 
           <p
             className="re-login"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/login")}
           >
             Already have an account? <span>Login</span>
           </p>
-
         </div>
-
       </div>
-
     </div>
   );
 }

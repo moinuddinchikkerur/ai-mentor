@@ -4,458 +4,380 @@
 
 
 
-
-// import { useState, useEffect } from "react";
-// import axios from "axios";
-// import { useNavigate } from "react-router-dom";
-// import "../main.css";
-
-// function Planner() {
-
-//   const navigate = useNavigate();
-
-//   const [title, setTitle] = useState(""); // ✅ NEW
-//   const [subjects, setSubjects] = useState("");
-//   const [plan, setPlan] = useState(null);
-//   const [history, setHistory] = useState([]);
-//   const [loading, setLoading] = useState(false);
-//   const [activeId, setActiveId] = useState(null);
-
-//   const token = localStorage.getItem("token");
-
-//   useEffect(() => {
-//     fetchHistory();
-//   }, []);
-
-//   const fetchHistory = async () => {
-//     try {
-//       const res = await axios.get(
-//         "http://localhost:5000/api/study/history",
-//         {
-//           headers: { Authorization: `Bearer ${token}` }
-//         }
-//       );
-//       setHistory(res.data.data);
-//     } catch (err) {
-//       console.error(err);
-//     }
-//   };
-
-//   const makePlan = async () => {
-
-//     if (!subjects.trim()) return alert("Enter subjects");
-
-//     setLoading(true);
-//     setPlan(null);
-
-//     try {
-//       const res = await axios.post(
-//         "http://localhost:5000/api/ai/plan",
-//         { subjects }
-//       );
-
-//       let receivedPlan = res.data.plan;
-
-//       if (typeof receivedPlan === "string") {
-//         receivedPlan = JSON.parse(receivedPlan);
-//       }
-
-//       setPlan(receivedPlan);
-
-//       await axios.post(
-//         "http://localhost:5000/api/study/save",
-//         {
-//           title,
-//           subjects: subjects.split(",").map(s => s.trim()),
-//           plan: receivedPlan
-//         },
-//         {
-//           headers: { Authorization: `Bearer ${token}` }
-//         }
-//       );
-
-//       fetchHistory();
-
-//     } catch (err) {
-//       console.error(err);
-//       alert("Error generating plan");
-//     }
-
-//     setLoading(false);
-//   };
-
-//   const deletePlan = async (id) => {
-//     await axios.delete(
-//       `http://localhost:5000/api/study/${id}`,
-//       {
-//         headers: { Authorization: `Bearer ${token}` }
-//       }
-//     );
-//     fetchHistory();
-//   };
-
-//   const timeOrder = [
-//     "9:00-10:00",
-//     "10:00-11:00",
-//     "11:00-12:00",
-//     "12:00-1:00",
-//     "1:00-2:00",
-//     "2:00-3:00",
-//     "3:00-4:00",
-//     "4:00-5:00"
-//   ];
-
-//   return (
-
-//     <div className="pr-layout">
-
-//       {/* SIDEBAR */}
-//       <div className="pr-sidebar">
-
-//         <h3 className="pr-logo">AI Mentor</h3>
-
-//         <button
-//           className="pr-new-btn"
-//           onClick={() => {
-//             setPlan(null);
-//             setActiveId(null);
-//           }}
-//         >
-//           + New Plan
-//         </button>
-
-//         <div className="pr-history-list">
-//           {history.map((item) => (
-//             <div
-//               key={item._id}
-//               className={`pr-sidebar-item ${activeId === item._id ? "pr-active" : ""}`}
-//             >
-
-//               <div
-//                 className="pr-history-text"
-//                 onClick={() => {
-//                   setPlan(item.plan);
-//                   setActiveId(item._id);
-//                 }}
-//               >
-//                 <div className="pr-title">
-//                   {item.title || item.subjects.join(", ")}
-//                 </div>
-//                 <div className="pr-date">
-//                   {new Date(item.createdAt).toLocaleString()}
-//                 </div>
-//               </div>
-
-//               <button
-//                 className="pr-delete-btn"
-//                 onClick={() => deletePlan(item._id)}
-//               >
-//                 ✕
-//               </button>
-
-//             </div>
-//           ))}
-//         </div>
-
-//       </div>
-
-//       {/* MAIN */}
-//       <div className="pr-main">
-
-//         <div className="pr-panel">
-
-//           {/* HEADER */}
-//           <div className="pr-header">
-
-//             <button
-//               className="pr-back-btn"
-//               onClick={() => navigate("/dashboard")}
-//             >
-//               ← Back
-//             </button>
-
-//             <h2 className="pr-page-title">Study Planner</h2>
-
-//           </div>
-
-//           {/* FORM */}
-//           <div className="pr-form">
-
-//             {/* 🔥 TITLE INPUT */}
-//             <div className="pr-field">
-//               <label>Plan Title</label>
-//               <input
-//                 className="pr-input"
-//                 placeholder="Enter plan title..."
-//                 value={title}
-//                 onChange={(e) => setTitle(e.target.value)}
-//               />
-//             </div>
-
-//             <div className="pr-field">
-//               <label>Subjects</label>
-//               <input
-//                 className="pr-input"
-//                 placeholder="Subjects (DBMS, OS, CN...)"
-//                 value={subjects}
-//                 onChange={(e) => setSubjects(e.target.value)}
-//               />
-//             </div>
-
-//             <button
-//               className="pr-generate-btn full"
-//               onClick={makePlan}
-//             >
-//               {loading ? "Generating..." : "Generate Study Plan"}
-//             </button>
-
-//           </div>
-
-//           {/* TABLE */}
-//           {plan && (
-//             <div className="pr-table-container">
-
-//               <h3 className="pr-table-title">
-//                 📅 {title || "Weekly Study Plan"}
-//               </h3>
-
-//               <table className="pr-table">
-
-//                 <thead>
-//                   <tr>
-//                     <th>Day / Time</th>
-//                     <th>9-10</th>
-//                     <th>10-11</th>
-//                     <th>11-12</th>
-//                     <th>12-1</th>
-//                     <th>1-2</th>
-//                     <th>2-3</th>
-//                     <th>3-4</th>
-//                     <th>4-5</th>
-//                   </tr>
-//                 </thead>
-
-//                 <tbody>
-//                   {Object.entries(plan).map(([day, slots]) => (
-//                     <tr key={day}>
-//                       <td className="day-col">{day}</td>
-
-//                       {timeOrder.map((time, i) => (
-//                         <td
-//                           key={i}
-//                           className={slots[time] === "Break" ? "break-cell" : ""}
-//                         >
-//                           {slots[time]}
-//                         </td>
-//                       ))}
-
-//                     </tr>
-//                   ))}
-//                 </tbody>
-
-//               </table>
-
-//             </div>
-//           )}
-
-//         </div>
-
-//       </div>
-
-//     </div>
-//   );
-// }
-
-// export default Planner;
-
-
-
-
-
-
-
-
-
-
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import api from "../services/api";
 import "../main.css";
 
-function Planner() {
+const timeOrder = [
+  "9-10",
+  "10-11",
+  "11-12",
+  "12-1",
+  "1-2",
+  "2-3",
+  "3-4",
+  "4-5"
+];
 
+const weekDays = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday"
+];
+
+const oldTimeKeys = {
+  "9-10": "9:00-10:00",
+  "10-11": "10:00-11:00",
+  "11-12": "11:00-12:00",
+  "12-1": "12:00-1:00",
+  "1-2": "1:00-2:00",
+  "2-3": "2:00-3:00",
+  "3-4": "3:00-4:00",
+  "4-5": "4:00-5:00"
+};
+
+const parseSubjectsInput = (value) => {
+  const seen = new Set();
+
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .filter((item) => {
+      const key = item.toLowerCase();
+
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 12);
+};
+
+const subjectsToText = (value) => {
+  if (Array.isArray(value)) {
+    return value.join(", ");
+  }
+
+  return String(value || "");
+};
+
+const parsePlanObject = (value) => {
+  if (!value) return null;
+
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+
+  return value;
+};
+
+const getSlotValue = (slots, time) => {
+  return slots?.[time] || slots?.[oldTimeKeys[time]] || "-";
+};
+
+function Planner() {
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
   const [subjects, setSubjects] = useState("");
   const [plan, setPlan] = useState(null);
+  const [strategy, setStrategy] = useState("");
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const [activeId, setActiveId] = useState(null);
+  const [error, setError] = useState("");
 
-  const token = localStorage.getItem("token");
+  const subjectPreview = useMemo(() => {
+    return parseSubjectsInput(subjects);
+  }, [subjects]);
+
+  const orderedPlan = useMemo(() => {
+    if (!plan) return [];
+
+    return weekDays
+      .map((day) => [day, plan[day] || {}])
+      .filter(([, slots]) => Object.keys(slots).length > 0);
+  }, [plan]);
+
+  const buttonLabel = activeId
+    ? "Update Study Plan"
+    : "Generate Study Plan";
+
+  const syncActivePlan = useCallback((nextPlan) => {
+    if (nextPlan) {
+      localStorage.setItem("activePlan", JSON.stringify(nextPlan));
+    } else {
+      localStorage.removeItem("activePlan");
+    }
+
+    window.dispatchEvent(new Event("dashboardRefresh"));
+    window.dispatchEvent(new Event("activePlanChanged"));
+  }, []);
+
+  const applyPlan = useCallback((item) => {
+    const nextPlan = parsePlanObject(item?.plan);
+
+    if (!nextPlan) {
+      return;
+    }
+
+    setPlan(nextPlan);
+    setStrategy(item?.strategy || item?.aiResponse || "");
+    setTitle(item?.title || "");
+    setSubjects(subjectsToText(item?.subjects));
+    setActiveId(item?._id || null);
+    setError("");
+
+    syncActivePlan(nextPlan);
+  }, [syncActivePlan]);
+
+  const fetchHistory = useCallback(async () => {
+    try {
+      setHistoryLoading(true);
+
+      const res = await api.get("/study/plans");
+
+      const plans = Array.isArray(res.data?.data)
+        ? [...res.data.data].sort(
+            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+          )
+        : [];
+
+      setHistory(plans);
+    } catch (err) {
+      console.error("Failed to load planner history:", err);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [fetchHistory]);
 
-  const fetchHistory = async () => {
-    try {
-      const res = await axios.get(
-        "http://localhost:5000/api/study/history",
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      setHistory(res.data.data);
-    } catch (err) {
-      console.error(err);
+  const resetBuilder = () => {
+    setTitle("");
+    setSubjects("");
+    setPlan(null);
+    setStrategy("");
+    setActiveId(null);
+    setError("");
+    syncActivePlan(null);
+  };
+
+  const persistPlan = async ({
+    planTitle,
+    cleanSubjects,
+    nextStrategy,
+    receivedPlan
+  }) => {
+    const payload = {
+      title: planTitle,
+      subjects: cleanSubjects,
+      days: 7,
+      strategy: nextStrategy,
+      aiResponse: nextStrategy,
+      plan: receivedPlan
+    };
+
+    if (activeId) {
+      return api.put(`/study/plan/${activeId}`, payload);
     }
+
+    return api.post("/study/save-plan", payload);
   };
 
   const makePlan = async () => {
+    const cleanSubjects = parseSubjectsInput(subjects);
 
-    if (!subjects.trim()) return alert("Enter subjects");
+    if (cleanSubjects.length === 0) {
+      alert("Enter at least one subject");
+      return;
+    }
 
     setLoading(true);
-    setPlan(null);
+    setError("");
 
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/ai/plan",
-        { subjects }
-      );
+      const planTitle = title.trim() || "Weekly Study Plan";
 
-      let receivedPlan = res.data.plan;
+      const res = await api.post("/ai/plan", {
+        title: planTitle,
+        subjects: cleanSubjects.join(", "),
+        days: 7
+      });
 
-      if (typeof receivedPlan === "string") {
-        receivedPlan = JSON.parse(receivedPlan);
+      const receivedPlan = parsePlanObject(res.data?.plan);
+      const normalizedSubjects =
+        Array.isArray(res.data?.subjects) && res.data.subjects.length > 0
+          ? res.data.subjects
+          : cleanSubjects;
+      const nextStrategy = res.data?.strategy || res.data?.aiResponse || "";
+
+      if (!receivedPlan) {
+        throw new Error("Invalid plan format received from server");
       }
 
       setPlan(receivedPlan);
+      setStrategy(nextStrategy);
+      syncActivePlan(receivedPlan);
 
-      // 🔥 SAVE PLAN (existing)
-      await axios.post(
-        "http://localhost:5000/api/study/save",
-        {
-          title,
-          subjects: subjects.split(",").map(s => s.trim()),
-          plan: receivedPlan
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const saveRes = await persistPlan({
+        planTitle,
+        cleanSubjects: normalizedSubjects,
+        nextStrategy,
+        receivedPlan
+      });
 
-      // 🔥 NEW: STORE IN LOCALSTORAGE (IMPORTANT)
-      localStorage.setItem("activePlan", JSON.stringify(receivedPlan));
+      const savedPlan = saveRes.data?.plan || saveRes.data?.data || null;
 
-      fetchHistory();
+      if (savedPlan?._id) {
+        applyPlan(savedPlan);
+      } else {
+        setTitle(planTitle);
+        setSubjects(normalizedSubjects.join(", "));
+      }
 
+      await fetchHistory();
     } catch (err) {
-      console.error(err);
-      alert("Error generating plan");
-    }
+      console.error("Planner generate error:", err);
 
-    setLoading(false);
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        "Error generating plan";
+
+      setError(message);
+      alert(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const deletePlan = async (id) => {
-    await axios.delete(
-      `http://localhost:5000/api/study/${id}`,
-      {
-        headers: { Authorization: `Bearer ${token}` }
+    const ok = window.confirm("Delete this study plan?");
+
+    if (!ok) return;
+
+    try {
+      await api.delete(`/study/plan/${id}`);
+
+      const remaining = history.filter((item) => item._id !== id);
+      setHistory(remaining);
+
+      if (activeId === id) {
+        if (remaining.length > 0) {
+          applyPlan(remaining[0]);
+        } else {
+          setPlan(null);
+          setStrategy("");
+          setActiveId(null);
+          setTitle("");
+          setSubjects("");
+          setError("");
+          syncActivePlan(null);
+        }
       }
-    );
-    fetchHistory();
+    } catch (err) {
+      console.error("Delete plan failed:", err);
+      alert(err.response?.data?.message || "Delete failed");
+    }
   };
 
-  const timeOrder = [
-    "9:00-10:00",
-    "10:00-11:00",
-    "11:00-12:00",
-    "12:00-1:00",
-    "1:00-2:00",
-    "2:00-3:00",
-    "3:00-4:00",
-    "4:00-5:00"
-  ];
-
   return (
-
     <div className="pr-layout">
-
       <div className="pr-sidebar">
-
         <h3 className="pr-logo">AI Mentor</h3>
 
         <button
           className="pr-new-btn"
-          onClick={() => {
-            setPlan(null);
-            setActiveId(null);
-          }}
+          type="button"
+          onClick={resetBuilder}
         >
           + New Plan
         </button>
 
         <div className="pr-history-list">
+          {historyLoading && (
+            <p className="pr-empty-history">Loading plan history...</p>
+          )}
+
+          {!historyLoading && history.length === 0 && (
+            <p className="pr-empty-history">No saved plans yet</p>
+          )}
+
           {history.map((item) => (
             <div
               key={item._id}
-              className={`pr-sidebar-item ${activeId === item._id ? "pr-active" : ""}`}
+              className={`pr-sidebar-item ${
+                activeId === item._id ? "pr-active" : ""
+              }`}
             >
-
               <div
                 className="pr-history-text"
-                onClick={() => {
-                  setPlan(item.plan);
-                  setActiveId(item._id);
-
-                  // 🔥 NEW: UPDATE ACTIVE PLAN
-                  localStorage.setItem("activePlan", JSON.stringify(item.plan));
-                }}
+                onClick={() => applyPlan(item)}
               >
                 <div className="pr-title">
-                  {item.title || item.subjects.join(", ")}
+                  {item.title ||
+                    item.subject ||
+                    (Array.isArray(item.subjects)
+                      ? item.subjects.join(", ")
+                      : item.subjects) ||
+                    "Study Plan"}
                 </div>
+
                 <div className="pr-date">
                   {new Date(item.createdAt).toLocaleString()}
                 </div>
+
+                {Array.isArray(item.subjects) && item.subjects.length > 0 && (
+                  <div className="pr-meta">
+                    {item.subjects.slice(0, 4).join(", ")}
+                    {item.subjects.length > 4 ? "..." : ""}
+                  </div>
+                )}
               </div>
 
               <button
                 className="pr-delete-btn"
+                type="button"
                 onClick={() => deletePlan(item._id)}
               >
-                ✕
+                X
               </button>
-
             </div>
           ))}
         </div>
-
       </div>
 
       <div className="pr-main">
-
         <div className="pr-panel">
-
           <div className="pr-header">
-
             <button
               className="pr-back-btn"
+              type="button"
               onClick={() => navigate("/dashboard")}
             >
-              ← Back
+              Back
             </button>
 
             <h2 className="pr-page-title">Study Planner</h2>
-
           </div>
 
           <div className="pr-form">
-
             <div className="pr-field">
               <label>Plan Title</label>
               <input
@@ -470,71 +392,92 @@ function Planner() {
               <label>Subjects</label>
               <input
                 className="pr-input"
-                placeholder="Subjects (DBMS, OS, CN...)"
+                placeholder="Subjects (java,c,python)"
                 value={subjects}
                 onChange={(e) => setSubjects(e.target.value)}
               />
+
+              <p className="pr-helper">
+                Add subjects separated by commas. Duplicate subjects are removed automatically.
+              </p>
+
+              {subjectPreview.length > 0 && (
+                <div className="pr-chip-list">
+                  {subjectPreview.map((item) => (
+                    <span key={item} className="pr-chip">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <button
               className="pr-generate-btn full"
+              type="button"
               onClick={makePlan}
+              disabled={loading}
             >
-              {loading ? "Generating..." : "Generate Study Plan"}
+              {loading ? "Generating..." : buttonLabel}
             </button>
-
           </div>
+
+          {error && <p className="pr-error">{error}</p>}
+
+          {strategy && (
+            <div className="pr-strategy-box">
+              <h3 className="pr-strategy-title">AI Study Strategy</h3>
+              <p className="pr-strategy-text">{strategy}</p>
+            </div>
+          )}
+
+          {!plan && !loading && (
+            <div className="pr-empty-plan">
+              Generate a new study plan or open one from history.
+            </div>
+          )}
 
           {plan && (
             <div className="pr-table-container">
-
               <h3 className="pr-table-title">
-                📅 {title || "Weekly Study Plan"}
+                {title || "Weekly Study Plan"}
               </h3>
 
               <table className="pr-table">
-
                 <thead>
                   <tr>
                     <th>Day / Time</th>
-                    <th>9-10</th>
-                    <th>10-11</th>
-                    <th>11-12</th>
-                    <th>12-1</th>
-                    <th>1-2</th>
-                    <th>2-3</th>
-                    <th>3-4</th>
-                    <th>4-5</th>
+                    {timeOrder.map((time) => (
+                      <th key={time}>{time}</th>
+                    ))}
                   </tr>
                 </thead>
 
                 <tbody>
-                  {Object.entries(plan).map(([day, slots]) => (
+                  {orderedPlan.map(([day, slots]) => (
                     <tr key={day}>
                       <td className="day-col">{day}</td>
 
-                      {timeOrder.map((time, i) => (
-                        <td
-                          key={i}
-                          className={slots[time] === "Break" ? "break-cell" : ""}
-                        >
-                          {slots[time]}
-                        </td>
-                      ))}
+                      {timeOrder.map((time) => {
+                        const value = getSlotValue(slots, time);
 
+                        return (
+                          <td
+                            key={`${day}-${time}`}
+                            className={value === "Break" ? "break-cell" : ""}
+                          >
+                            {value}
+                          </td>
+                        );
+                      })}
                     </tr>
                   ))}
                 </tbody>
-
               </table>
-
             </div>
           )}
-
         </div>
-
       </div>
-
     </div>
   );
 }

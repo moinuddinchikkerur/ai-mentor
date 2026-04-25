@@ -1,27 +1,33 @@
-import { useNavigate, useLocation } from "react-router-dom";
+
+
+
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-  FaComments,
-  FaQuestionCircle,
-  FaCheckCircle,
   FaBook,
-  FaGamepad,
   FaChartBar,
+  FaCheckCircle,
+  FaComments,
+  FaEye,
+  FaGamepad,
+  FaQuestionCircle,
   FaUserTie
 } from "react-icons/fa";
 
 import Profile from "./Profile";
 
 function Sidebar() {
-
   const navigate = useNavigate();
   const location = useLocation();
 
   const menuItem = (path, icon, label) => (
     <div
+      role="button"
+      tabIndex={0}
       onClick={() => navigate(path)}
-      className={`sidebar-item ${
-        location.pathname === path ? "active" : ""
-      }`}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") navigate(path);
+      }}
+      className={`sidebar-item ${location.pathname === path ? "active" : ""}`}
     >
       <div className="sidebar-icon">{icon}</div>
       <span>{label}</span>
@@ -30,28 +36,35 @@ function Sidebar() {
 
   return (
     <div className="sidebar">
-
-      {/* ===== TOP SECTION ===== */}
       <div className="sidebar-top">
+        <h2
+          className="logo"
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate("/dashboard")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") navigate("/dashboard");
+          }}
+        >
+          MinTas
+        </h2>
 
-        <h2 className="logo">🎓 AI Mentor</h2>
-
-        {/* ✅ PROFILE (clickable → go to profile page) */}
-        <div 
-          onClick={() => navigate("/profile")} 
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => navigate("/profile")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") navigate("/profile");
+          }}
           style={{ cursor: "pointer" }}
         >
           <Profile />
         </div>
-
       </div>
 
-      {/* ===== MENU SECTION ===== */}
       <div className="sidebar-middle">
-
         <div className="sidebar-group">
           <p className="sidebar-heading">AI Tools</p>
-
           {menuItem("/chat", <FaComments />, "AI Chat")}
           {menuItem("/mcq", <FaQuestionCircle />, "MCQ Generator")}
           {menuItem("/evaluate", <FaCheckCircle />, "Answer Checker")}
@@ -62,17 +75,16 @@ function Sidebar() {
 
         <div className="sidebar-group">
           <p className="sidebar-heading">Reports</p>
-
           {menuItem("/report", <FaChartBar />, "Weekly Report")}
           {menuItem("/analytics", <FaChartBar />, "Analytics")}
+          {menuItem("/attention-report", <FaEye />, "Attention Report")}
         </div>
-
-        {/* ❌ REMOVED ACCOUNT SECTION */}
-
       </div>
-
     </div>
   );
 }
 
 export default Sidebar;
+
+
+

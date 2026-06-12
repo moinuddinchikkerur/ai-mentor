@@ -1,29 +1,53 @@
-const OLLAMA_URL = "http://127.0.0.1:11434/api/generate";
+import express from "express";
+import User from "../models/User.js";
+import authMiddleware from "../middleware/authMiddleware.js";
+import {
+  getAdminStats,
+  getAdminUsers,
+  getAdminStudentDetails,
+  updateUserRole,
+  toggleUserBlock,
+  deleteUser
+} from "../controllers/adminController.js";
 
-export async function runAI(prompt) {
+const router = express.Router();
+
+const requireAdmin = async (req, res, next) => {
   try {
-    const res = await fetch(OLLAMA_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "phi",
-        prompt,
-        stream: false,
-      }),
-    });
+    const userId = req.user?.id;
 
-    if (!res.ok) {
-      throw new Error("AI server error");
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized"
+      });
     }
 
-    const data = await res.json();
+    const user = await User.findById(userId);
 
-    return data.response;
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Admin access only"
+      });
+    }
 
+    next();
   } catch (err) {
-    console.error("AI Helper Error:", err.message);
-    throw err;
+    console.error("Admin Middleware Error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Admin check failed"
+    });
   }
-}
+};
+
+router.get("/stats", authMiddleware, requireAdmin, getAdminStats);
+router.get("/users", authMiddleware, requireAdmin, getAdminUsers);
+router.get("/users/:id/details", authMiddleware, requireAdmin, getAdminStudentDetails);
+router.put("/users/:id/role", authMiddleware, requireAdmin, updateUserRole);
+router.put("/users/:id/block", authMiddleware, requireAdmin, toggleUserBlock);
+router.delete("/users/:id", authMiddleware, requireAdmin, deleteUser);
+
+export default router;

@@ -1,15 +1,135 @@
 <!DOCTYPE html>
 <html>
-<body style="text-align:center">
+<head>
+  <title>Pong Game</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #151225; color: #fff; font-family: Arial, sans-serif; }
+    .wrap { text-align: center; }
+    canvas { background: #080a12; border: 4px solid #b72be8; border-radius: 12px; }
+    button { margin-top: 12px; padding: 10px 16px; border: 0; border-radius: 8px; background: #b72be8; color: #fff; font-weight: 700; cursor: pointer; }
+    p { color: #d8c7ff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Pong Game</h2>
+    <p>Move mouse or use Arrow Up / Arrow Down</p>
+    <canvas id="game" width="760" height="460" tabindex="0"></canvas>
+    <br>
+    <button onclick="restart()">Restart</button>
+  </div>
 
-<h2>Pong Game</h2>
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
 
-<iframe
-src="https://plays.org/game/pong/"
-width="800"
-height="600"
-style="border:none">
-</iframe>
+    const paddleW = 12;
+    const paddleH = 90;
+    let player, ai, ball, playerScore, aiScore, keys;
 
+    function restart() {
+      player = { x: 25, y: canvas.height / 2 - paddleH / 2 };
+      ai = { x: canvas.width - 37, y: canvas.height / 2 - paddleH / 2 };
+      ball = { x: canvas.width / 2, y: canvas.height / 2, vx: 5, vy: 3, r: 9 };
+      playerScore = 0;
+      aiScore = 0;
+      keys = {};
+      canvas.focus();
+    }
+
+    function resetBall(direction) {
+      ball.x = canvas.width / 2;
+      ball.y = canvas.height / 2;
+      ball.vx = 5 * direction;
+      ball.vy = (Math.random() > 0.5 ? 3 : -3);
+    }
+
+    function drawRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+    }
+
+    function draw() {
+      drawRect(0, 0, canvas.width, canvas.height, "#080a12");
+
+      ctx.strokeStyle = "#4c1d95";
+      ctx.setLineDash([10, 10]);
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2, 0);
+      ctx.lineTo(canvas.width / 2, canvas.height);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      drawRect(player.x, player.y, paddleW, paddleH, "#22c55e");
+      drawRect(ai.x, ai.y, paddleW, paddleH, "#f59e0b");
+
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.font = "30px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(playerScore + " : " + aiScore, canvas.width / 2, 40);
+    }
+
+    function update() {
+      if (keys.ArrowUp) player.y -= 7;
+      if (keys.ArrowDown) player.y += 7;
+
+      player.y = Math.max(0, Math.min(canvas.height - paddleH, player.y));
+
+      ai.y += (ball.y - (ai.y + paddleH / 2)) * 0.08;
+      ai.y = Math.max(0, Math.min(canvas.height - paddleH, ai.y));
+
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+
+      if (ball.y < ball.r || ball.y > canvas.height - ball.r) {
+        ball.vy *= -1;
+      }
+
+      if (
+        ball.x - ball.r < player.x + paddleW &&
+        ball.y > player.y &&
+        ball.y < player.y + paddleH
+      ) {
+        ball.vx = Math.abs(ball.vx) + 0.25;
+      }
+
+      if (
+        ball.x + ball.r > ai.x &&
+        ball.y > ai.y &&
+        ball.y < ai.y + paddleH
+      ) {
+        ball.vx = -Math.abs(ball.vx) - 0.25;
+      }
+
+      if (ball.x < 0) {
+        aiScore += 1;
+        resetBall(1);
+      }
+
+      if (ball.x > canvas.width) {
+        playerScore += 1;
+        resetBall(-1);
+      }
+
+      draw();
+      requestAnimationFrame(update);
+    }
+
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      player.y = e.clientY - rect.top - paddleH / 2;
+    });
+
+    document.addEventListener("keydown", (e) => keys[e.key] = true);
+    document.addEventListener("keyup", (e) => keys[e.key] = false);
+    canvas.addEventListener("click", () => canvas.focus());
+
+    restart();
+    update();
+  </script>
 </body>
 </html>

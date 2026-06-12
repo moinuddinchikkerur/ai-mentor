@@ -1,7 +1,3 @@
-
-
-
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import api from "../services/api";
 import "../main.css";
@@ -258,6 +254,8 @@ function AttentionMonitor({ floating = true }) {
 
   const subjectRef = useRef("General");
   const subjectSourceRef = useRef("timetable");
+  const subjectKeyRef = useRef("");
+  const subjectReadyRef = useRef(false);
 
   const [status, setStatus] = useState("Starting...");
   const [isTabActive, setIsTabActive] = useState(true);
@@ -305,11 +303,6 @@ function AttentionMonitor({ floating = true }) {
       ? "manual"
       : "timetable";
   }, [manualSubject, timetableInfo]);
-
-  useEffect(() => {
-    subjectRef.current = resolvedSubject;
-    subjectSourceRef.current = subjectSource;
-  }, [resolvedSubject, subjectSource]);
 
   const clampFloatingPosition = useCallback((nextPosition) => {
     if (!floating || typeof window === "undefined") {
@@ -510,6 +503,57 @@ function AttentionMonitor({ floating = true }) {
     },
     [buildPayload]
   );
+
+  useEffect(() => {
+    const nextSubject = resolvedSubject || "General";
+    const nextSource = subjectSource || "timetable";
+    const nextKey = `${nextSource}:${nextSubject}`;
+
+    if (!subjectReadyRef.current) {
+      subjectReadyRef.current = true;
+      subjectKeyRef.current = nextKey;
+      subjectRef.current = nextSubject;
+      subjectSourceRef.current = nextSource;
+      return;
+    }
+
+    if (subjectKeyRef.current === nextKey) {
+      return;
+    }
+
+    const current = latestRef.current;
+    const hasTime =
+      current.studyTime > 0 ||
+      current.absentTime > 0 ||
+      current.alerts > 0;
+
+    if (hasTime) {
+      persistAttention().catch((err) => {
+        console.error("Subject switch attention save failed:", err);
+      });
+    }
+
+    sessionIdRef.current = createSessionId();
+    startedAtRef.current = new Date().toISOString();
+
+    lastSavedMinuteRef.current = 0;
+    latestRef.current = {
+      studyTime: 0,
+      absentTime: 0,
+      alerts: 0
+    };
+
+    setStudyTime(0);
+    setAbsentTime(0);
+    setAlerts(0);
+
+    lastSeenRef.current = Date.now();
+    awayAlertActiveRef.current = false;
+
+    subjectKeyRef.current = nextKey;
+    subjectRef.current = nextSubject;
+    subjectSourceRef.current = nextSource;
+  }, [resolvedSubject, subjectSource, persistAttention]);
 
   const stopCamera = useCallback((nextStatus = "Camera Stopped") => {
     try {

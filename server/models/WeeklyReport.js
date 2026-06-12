@@ -1,19 +1,22 @@
-
-
-
-
-
 import mongoose from "mongoose";
 
 const weeklyReportSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true
+    required: true,
+    index: true
   },
 
-  weekStart: Date,
-  weekEnd: Date,
+  weekStart: {
+    type: Date,
+    default: null
+  },
+
+  weekEnd: {
+    type: Date,
+    default: null
+  },
 
   plannedHours: {
     type: Number,
@@ -60,5 +63,8 @@ const weeklyReportSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+weeklyReportSchema.index({ userId: 1, createdAt: -1 });
+weeklyReportSchema.index({ userId: 1, weekStart: -1 });
 
 export default mongoose.model("WeeklyReport", weeklyReportSchema);

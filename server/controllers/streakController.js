@@ -1,7 +1,22 @@
-
-
-
 import Streak from "../models/Streak.js";
+
+const DAY_MS = 1000 * 60 * 60 * 24;
+const DAILY_LOGIN_POINTS = 10;
+const DAILY_STREAK_POINTS = 5;
+const MISSED_DAY_PENALTY = 10;
+
+const getStartOfDay = (value = new Date()) => {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+const getDayDiff = (fromDate, toDate) => {
+  const from = getStartOfDay(fromDate);
+  const to = getStartOfDay(toDate);
+
+  return Math.round((to - from) / DAY_MS);
+};
 
 const getDefaultStreak = async (userId) => {
   let streak = await Streak.findOne({ userId });
@@ -12,7 +27,8 @@ const getDefaultStreak = async (userId) => {
       days: 0,
       points: 0,
       gamesPlayed: 0,
-      rewards: []
+      rewards: [],
+      lastActive: new Date()
     });
   }
 
@@ -31,62 +47,74 @@ export const updateStreak = async (req, res) => {
     }
 
     let streak = await Streak.findOne({ userId });
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
 
     if (!streak) {
       streak = new Streak({
         userId,
         days: 1,
-        points: 10,
+        points: DAILY_LOGIN_POINTS,
         gamesPlayed: 0,
         rewards: [
           {
             reason: "Daily login",
-            points: 10
+            points: DAILY_LOGIN_POINTS
           }
         ],
-        lastActive: new Date()
+        lastActive: now
       });
-    } else {
-      const last = new Date(streak.lastActive);
-      last.setHours(0, 0, 0, 0);
 
-      const diff = (today - last) / (1000 * 60 * 60 * 24);
+      await streak.save();
 
-      if (diff === 0) {
-        // already counted today
-      } else if (diff === 1) {
-        streak.days += 1;
-        streak.points += 5;
-        streak.rewards.push({
-          reason: "Daily streak",
-          points: 5
-        });
-      } else if (diff > 1) {
-        streak.days = 1;
-        streak.points += 10;
-        streak.rewards.push({
-          reason: "Streak restarted",
-          points: 10
-        });
-      }
-
-      streak.lastActive = new Date();
+      return res.json({
+        success: true,
+        streak
+      });
     }
+
+    const diff = getDayDiff(streak.lastActive, now);
+
+    if (diff === 0) {
+      return res.json({
+        success: true,
+        streak
+      });
+    }
+
+    if (diff === 1) {
+      streak.days += 1;
+      streak.points += DAILY_STREAK_POINTS;
+      streak.rewards.push({
+        reason: "Daily streak",
+        points: DAILY_STREAK_POINTS
+      });
+    }
+
+    if (diff > 1) {
+      const missedDays = diff - 1;
+      const penalty = missedDays * MISSED_DAY_PENALTY;
+
+      streak.days = Math.max(0, streak.days - missedDays);
+      streak.points = Math.max(0, streak.points - penalty);
+
+      streak.rewards.push({
+        reason: `Missed ${missedDays} day${missedDays > 1 ? "s" : ""}`,
+        points: -penalty
+      });
+    }
+
+    streak.lastActive = now;
 
     await streak.save();
 
-    res.json({
+    return res.json({
       success: true,
       streak
     });
-
   } catch (err) {
-    console.error("❌ Streak Error:", err);
+    console.error("Streak Error:", err);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Streak update failed"
     });
@@ -97,15 +125,14 @@ export const getMyStreak = async (req, res) => {
   try {
     const streak = await getDefaultStreak(req.user.id);
 
-    res.json({
+    return res.json({
       success: true,
       streak
     });
-
   } catch (err) {
-    console.error("❌ Get Streak Error:", err);
+    console.error("Get Streak Error:", err);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to load streak"
     });
@@ -129,22 +156,16 @@ export const addReward = async (req, res) => {
 
     await streak.save();
 
-    res.json({
+    return res.json({
       success: true,
       streak
     });
-
   } catch (err) {
-    console.error("❌ Reward Error:", err);
+    console.error("Reward Error:", err);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Reward failed"
     });
   }
 };
-
-
-
-
-

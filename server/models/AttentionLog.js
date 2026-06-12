@@ -1,13 +1,3 @@
-
-
-
-
-
-
-
-
-
-
 import mongoose from "mongoose";
 
 const attentionSchema = new mongoose.Schema(
@@ -15,7 +5,8 @@ const attentionSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
+      index: true
     },
 
     sessionId: {
@@ -93,10 +84,3 @@ attentionSchema.index(
 );
 
 export default mongoose.model("AttentionLog", attentionSchema);
-
-
-
-
-
-
-

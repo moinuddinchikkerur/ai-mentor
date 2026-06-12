@@ -1,10 +1,3 @@
-
-
-
-
-
-
-
 import mongoose from "mongoose";
 
 const studyLogSchema = new mongoose.Schema(
@@ -12,7 +5,8 @@ const studyLogSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
+      index: true
     },
 
     entryType: {

@@ -1,48 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import mongoose from "mongoose";
 
 const evaluationSchema = new mongoose.Schema(
@@ -64,8 +19,7 @@ const evaluationSchema = new mongoose.Schema(
     subject: {
       type: String,
       default: "General",
-      trim: true,
-      index: true
+      trim: true
     },
 
     question: {
@@ -84,8 +38,7 @@ const evaluationSchema = new mongoose.Schema(
 
     result: {
       type: String,
-      default: "",
-      trim: true
+      default: ""
     },
 
     marks: {
@@ -96,8 +49,8 @@ const evaluationSchema = new mongoose.Schema(
 
     maxMarks: {
       type: Number,
-      default: 20,
-      enum: [2, 5, 10, 15, 20, 25, 30]
+      enum: [2, 5, 10, 15, 20, 25, 30],
+      default: 20
     },
 
     wordCount: {
@@ -111,6 +64,7 @@ const evaluationSchema = new mongoose.Schema(
   }
 );
 
-evaluationSchema.index({ userId: 1, chatId: 1, createdAt: -1 });
+evaluationSchema.index({ userId: 1, chatId: 1, createdAt: 1 });
+evaluationSchema.index({ userId: 1, subject: 1, createdAt: -1 });
 
 export default mongoose.model("Evaluation", evaluationSchema);

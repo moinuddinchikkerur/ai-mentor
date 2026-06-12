@@ -1,31 +1,207 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Chess</title>
-<script src="https://cdn.jsdelivr.net/npm/chess.js@1.0.0-beta.0/dist/chess.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/react-chessboard@1.0.0/dist/index.min.js"></script>
-<style>
-body{
-font-family:Arial;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-background:#222;
-color:white;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chess</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      background: #15131f;
+      color: white;
+    }
+
+    .wrap {
+      width: min(94vw, 720px);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      width: min(92vw, 560px);
+      aspect-ratio: 1;
+      margin: 0 auto 16px;
+      border: 8px solid #6b4f3b;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .sq {
+      border: 0;
+      font-size: clamp(28px, 7vw, 54px);
+      cursor: pointer;
+    }
+
+    .light { background: #f0d9b5; }
+    .dark { background: #b58863; }
+    .selected { outline: 4px solid #c026d3; outline-offset: -4px; }
+    .move { box-shadow: inset 0 0 0 999px rgba(34, 197, 94, 0.25); }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 16px;
+      color: white;
+      background: #b72be8;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    #status {
+      min-height: 24px;
+      color: #e9d5ff;
+      font-weight: 700;
+    }
+  </style>
 </head>
 <body>
+  <div class="wrap">
+    <h1>Chess</h1>
+    <div id="board" class="board"></div>
 
-<h2>Chess Game</h2>
+    <div class="controls">
+      <button onclick="newGame()">New Game</button>
+      <button onclick="undoMove()">Undo</button>
+    </div>
 
-<iframe 
-src="https://playpager.com/embed/chess/index.html"
-width="600"
-height="600"
-style="border:none;">
-</iframe>
+    <div id="status"></div>
+  </div>
 
+  <script>
+    const boardEl = document.getElementById("board");
+    const statusEl = document.getElementById("status");
+
+    const icons = {
+      wp: "\u2659", wr: "\u2656", wn: "\u2658", wb: "\u2657", wq: "\u2655", wk: "\u2654",
+      bp: "\u265F", br: "\u265C", bn: "\u265E", bb: "\u265D", bq: "\u265B", bk: "\u265A"
+    };
+
+    let game = null;
+    let selected = null;
+
+    if (typeof Chess === "undefined") {
+      statusEl.textContent = "Chess engine failed to load. Check internet connection.";
+    } else {
+      game = new Chess();
+      render();
+    }
+
+    function newGame() {
+      game = new Chess();
+      selected = null;
+      render();
+    }
+
+    function undoMove() {
+      if (!game) return;
+      game.undo();
+      selected = null;
+      render();
+    }
+
+    function squareName(row, col) {
+      return "abcdefgh"[col] + (8 - row);
+    }
+
+    function getLegalTargets(square) {
+      return game.moves({ square, verbose: true }).map((move) => move.to);
+    }
+
+    function handleSquareClick(square) {
+      if (!game || game.game_over()) return;
+
+      const piece = game.get(square);
+
+      if (selected) {
+        const move = game.move({
+          from: selected,
+          to: square,
+          promotion: "q"
+        });
+
+        if (move) {
+          selected = null;
+          render();
+          return;
+        }
+
+        if (piece && piece.color === game.turn()) {
+          selected = square;
+          render();
+          return;
+        }
+
+        selected = null;
+        render();
+        return;
+      }
+
+      if (piece && piece.color === game.turn()) {
+        selected = square;
+        render();
+      }
+    }
+
+    function renderStatus() {
+      const turn = game.turn() === "w" ? "White" : "Black";
+
+      if (game.in_checkmate()) {
+        statusEl.textContent = `Checkmate. ${turn === "White" ? "Black" : "White"} wins.`;
+      } else if (game.in_draw()) {
+        statusEl.textContent = "Draw.";
+      } else if (game.in_check()) {
+        statusEl.textContent = `${turn} to move. Check.`;
+      } else {
+        statusEl.textContent = `${turn} to move.`;
+      }
+    }
+
+    function render() {
+      if (!game) return;
+
+      const legalTargets = selected ? getLegalTargets(selected) : [];
+      const board = game.board();
+
+      boardEl.innerHTML = "";
+
+      board.forEach((row, rowIndex) => {
+        row.forEach((piece, colIndex) => {
+          const square = squareName(rowIndex, colIndex);
+          const btn = document.createElement("button");
+
+          btn.className = `sq ${(rowIndex + colIndex) % 2 === 0 ? "light" : "dark"}`;
+
+          if (square === selected) btn.classList.add("selected");
+          if (legalTargets.includes(square)) btn.classList.add("move");
+
+          btn.textContent = piece ? icons[piece.color + piece.type] : "";
+          btn.onclick = () => handleSquareClick(square);
+
+          boardEl.appendChild(btn);
+        });
+      });
+
+      renderStatus();
+    }
+  </script>
 </body>
 </html>

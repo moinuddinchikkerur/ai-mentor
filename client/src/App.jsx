@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect, useState } from "react";
 import {
   BrowserRouter,
@@ -10,30 +7,28 @@ import {
   useLocation
 } from "react-router-dom";
 
-import { getToken } from "./services/api";
+import { getToken, getStoredUser } from "./services/api";
 
-// Auth Pages
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminStudentDetails from "./pages/AdminStudentDetails";
 
-// Main Components
 import Dashboard from "./components/Dashboard";
 import ChatBot from "./components/ChatBot";
 import WeeklyReport from "./pages/WeeklyReport";
 import Analytics from "./components/Analytics";
 
-// AI & Study Pages
 import MCQ from "./pages/MCQ";
 import Evaluate from "./pages/Evaluate";
 import Planner from "./pages/Planner";
 import Gamification from "./pages/Gamification";
 import CareerAI from "./pages/CareerAI";
 
-// Attention
 import AttentionMonitor from "./components/AttentionMonitor";
 import AttentionReport from "./pages/AttentionReport";
 
-// Profile
 import ProfilePage from "./pages/ProfilePage";
 
 export const MonitorContext = React.createContext({
@@ -51,6 +46,21 @@ const PrivateRoute = ({ children }) => {
   return children;
 };
 
+const AdminRoute = ({ children }) => {
+  const token = getToken();
+  const user = getStoredUser();
+
+  if (!token) {
+    return <Navigate to="/admin-login" replace />;
+  }
+
+  if (user?.role !== "admin") {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
 function AppContent() {
   const location = useLocation();
   const [token, setToken] = useState(getToken());
@@ -61,7 +71,8 @@ function AppContent() {
   const isAuthPage =
     location.pathname === "/" ||
     location.pathname === "/register" ||
-    location.pathname === "/login";
+    location.pathname === "/login" ||
+    location.pathname === "/admin-login";
 
   useEffect(() => {
     const syncAuth = () => {
@@ -101,6 +112,25 @@ function AppContent() {
         <Route path="/" element={<Register />} />
         <Route path="/register" element={<Navigate to="/" replace />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/admin-login" element={<AdminLogin />} />
+
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/users/:id"
+          element={
+            <AdminRoute>
+              <AdminStudentDetails />
+            </AdminRoute>
+          }
+        />
 
         <Route
           path="/dashboard"
@@ -225,3 +255,5 @@ function App() {
 }
 
 export default App;
+
+

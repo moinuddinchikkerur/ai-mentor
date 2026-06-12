@@ -1,13 +1,3 @@
-
-
-
-
-
-
-
-
-
-
 import mongoose from "mongoose";
 
 const mcqQuestionSchema = new mongoose.Schema(

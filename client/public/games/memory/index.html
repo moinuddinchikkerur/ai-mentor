@@ -1,15 +1,109 @@
 <!DOCTYPE html>
 <html>
-<body style="text-align:center">
+<head>
+  <title>Memory Game</title>
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #151225; color: #fff; font-family: Arial, sans-serif; }
+    .wrap { text-align: center; }
+    .grid { display: grid; grid-template-columns: repeat(4, 100px); gap: 12px; justify-content: center; }
+    .card { height: 100px; border: 0; border-radius: 12px; background: #b72be8; color: #fff; font-size: 34px; font-weight: 800; cursor: pointer; }
+    .card.done { background: #22c55e; }
+    button.reset { margin-top: 16px; padding: 10px 16px; border: 0; border-radius: 8px; background: #b72be8; color: #fff; font-weight: 700; cursor: pointer; }
+    p { color: #d8c7ff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>Memory Game</h2>
+    <p>Moves: <span id="moves">0</span></p>
+    <div id="grid" class="grid"></div>
+    <button class="reset" onclick="restart()">Restart</button>
+  </div>
 
-<h2>Memory Game</h2>
+  <script>
+    const icons = ["A", "B", "C", "D", "E", "F", "G", "H"];
+    const grid = document.getElementById("grid");
+    const movesEl = document.getElementById("moves");
+    let cards = [];
+    let first = null;
+    let second = null;
+    let lock = false;
+    let moves = 0;
 
-<iframe
-src="https://plays.org/game/memory/"
-width="800"
-height="600"
-style="border:none">
-</iframe>
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
 
+    function restart() {
+      cards = shuffle([...icons, ...icons]).map((value, index) => ({
+        id: index,
+        value,
+        open: false,
+        done: false
+      }));
+
+      first = null;
+      second = null;
+      lock = false;
+      moves = 0;
+      movesEl.textContent = moves;
+      render();
+    }
+
+    function render() {
+      grid.innerHTML = "";
+
+      cards.forEach((card) => {
+        const button = document.createElement("button");
+        button.className = "card" + (card.done ? " done" : "");
+        button.textContent = card.open || card.done ? card.value : "?";
+        button.onclick = () => flip(card.id);
+        grid.appendChild(button);
+      });
+    }
+
+    function flip(id) {
+      if (lock) return;
+
+      const card = cards.find((item) => item.id === id);
+
+      if (!card || card.open || card.done) return;
+
+      card.open = true;
+
+      if (!first) {
+        first = card;
+        render();
+        return;
+      }
+
+      second = card;
+      moves += 1;
+      movesEl.textContent = moves;
+      render();
+
+      if (first.value === second.value) {
+        first.done = true;
+        second.done = true;
+        first = null;
+        second = null;
+        render();
+        return;
+      }
+
+      lock = true;
+
+      setTimeout(() => {
+        first.open = false;
+        second.open = false;
+        first = null;
+        second = null;
+        lock = false;
+        render();
+      }, 750);
+    }
+
+    restart();
+  </script>
 </body>
 </html>
